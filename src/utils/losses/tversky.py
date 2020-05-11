@@ -6,8 +6,7 @@
 import tensorflow.keras.backend as K
 
 
-def _tversky_index(y_true, y_pred):
-    smooth = 1.0
+def _tversky_index(y_true, y_pred, smooth=1.0):
     y_true = K.flatten(y_true)
     y_pred = K.flatten(y_pred)
 
@@ -19,11 +18,14 @@ def _tversky_index(y_true, y_pred):
     return (tp + smooth) / (tp + alpha * fn + (1 - alpha) * fp + smooth)
 
 
-def tversky_loss(y_true, y_pred):
-    return 1 - _tversky_index(y_true, y_pred)
+def tversky_loss(smooth_tversky=1.0):
+    def compute_loss(y_true, y_pred):
+        return 1 - _tversky_index(y_true, y_pred, smooth=smooth_tversky)
+    return compute_loss
 
 
-def focal_tversky_loss(y_true, y_pred):
-    pt_1 = _tversky_index(y_true, y_pred)
-    gamma = 0.75
-    return K.pow((1 - pt_1), gamma)
+def focal_tversky_loss(gamma=0.75, smooth_tversky=1.0):
+    def compute_loss(y_true, y_pred):
+        pt_1 = _tversky_index(y_true, y_pred, smooth=smooth_tversky)
+        return K.pow((1 - pt_1), gamma)
+    return compute_loss
