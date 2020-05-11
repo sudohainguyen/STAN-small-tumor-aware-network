@@ -13,22 +13,22 @@ from tensorflow.keras.layers import (
 
 class Conv2DBlock(Layer):
     def __init__(
-        self, 
-        n_filters, 
+        self,
+        n_filters,
         kernel_size,
-        activation='relu', 
-        use_bn=False, 
-        name='conv2d', 
+        activation='relu',
+        use_bn=False,
+        name='conv2d',
         **kwargs
     ):
         super(Conv2DBlock, self).__init__()
-        self.conv = Conv2D(n_filters, kernel_size, name=f'{name}_conv', 
+        self.conv = Conv2D(n_filters, kernel_size, name=f'{name}_conv',
                             use_bias=(not use_bn), padding='same')
         self.use_bn = use_bn
         if use_bn:
             self.bn = BatchNorm(name=f'{name}_bn')
         self.activation = Activation(activation, name=f'{name}_activation')
-
+        
     def call(self, x):
         x = self.conv(x)
         if self.use_bn:
@@ -66,7 +66,7 @@ class EncoderBlock(Layer):
         """Feed forward through the Encoder block
 
         Arguments:
-            kernel3_inp {tensor} -- feature maps of kernel3 conv
+            kernel3_inp {tensor} -- feature maps of kernel3 conv 
                 from previous block or just an image
             kernelconcat_inp {[type]} -- feature maps of concatenation (kernel1 + kernel5)
                 from previous block or just an image
@@ -80,7 +80,7 @@ class EncoderBlock(Layer):
 
         x5 = self.conv5_1(kernelconcat_inp)
         x5 = self.conv5_2(x5)
-
+        
         concat = tf.concat([x1, x5], axis=3)
         concat_pool = self.agg_pool(concat)
 
@@ -96,8 +96,7 @@ class DecoderBlock(Layer):
     def __init__(
         self, 
         n_filters, 
-        mode='upsampling', 
-        is_last_block=False
+        mode='upsampling'
     ):
         """Initialize Decoding Block using UpSample layers
 
@@ -106,23 +105,19 @@ class DecoderBlock(Layer):
 
         Keyword Arguments:
             mode {str} -- Decoding mode (default: {'upsampling'})
-            is_last_block {bool} -- True when this is the last decoder block,
-                then the block will have only one conv layer (default: {False})
 
         Raises:
             ValueError: when the mode is not 'upsampling' or 'transpose'
-        """
-
+        """        
+    
         super(DecoderBlock, self).__init__()
-        self.is_last_block = is_last_block
-        self.conv_1 = Conv2D(n_filters, kernel_size=3, padding='same', activation='relu')
-        if not is_last_block:
-            self.conv_2 = Conv2D(n_filters, kernel_size=3, padding='same')
+        self.conv_1 = Conv2DBlock(n_filters, kernel_size=3)
+        self.conv_2 = Conv2DBlock(n_filters, kernel_size=3)
 
         if mode == 'upsampling':
             self.up = UpSampling2D(size=(2, 2))
         elif mode == 'transpose':
-            self.up = Conv2DTranspose(n_filters // 2, kernel_size=3, padding='same')
+            self.up = Conv2DTranspose(n_filters, kernel_size=3, strides=(2, 2), padding='same')
         else:
             raise ValueError()
 
@@ -136,11 +131,8 @@ class DecoderBlock(Layer):
 
         Returns:
             tensor -- output
-        """
+        """        
         x = self.up(inp)
         x = self.conv_1(tf.concat([x, skip1], axis=3))
-        if self.is_last_block:
-            return x
         x = self.conv_2(tf.concat([x, skip2], axis=3))
-        x = tf.nn.relu(x)
         return x
