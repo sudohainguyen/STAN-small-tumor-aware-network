@@ -3,11 +3,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-import os
-import cv2
 import math
 import numpy as np
-from PIL import Image
 
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, Iterator
@@ -22,6 +19,7 @@ class BaseGenerator(Iterator):
         resized_shape=(256, 256),
         batch_size=8,
         shuffle=False,
+        seed=None,
         **kwargs
     ):
         """Generator initialization, inherits Iterator class
@@ -38,36 +36,34 @@ class BaseGenerator(Iterator):
         """    
         self.fnames = fnames
         self.data_dir = data_dir
+        self.seed = seed
         self.ids = np.array(range(len(fnames)))
-        self.n_samples = len(ids)
+        self.n_samples = len(self.ids)
         self.resized_shape = resized_shape
-        self.batch_size = batch_size
+        
         self.shuffle = shuffle
-        self.img_gen = ImageDataGenerator(
-            featurewise_center=True, featurewise_std_normalization=True, **kwargs)
+        self.batch_size = batch_size
+        self.cursor = 0
+
+        self.img_gen = ImageDataGenerator(**kwargs)
         self.msk_gen = ImageDataGenerator(**kwargs)
 
     def __len__(self):
-        return math.floor(self.n_samples / batch_size)
-
+        return math.ceil(self.n_samples / self.batch_size)
+    
     def on_epoch_end(self):
+        self.cursor = 0
         if self.shuffle:
             np.random.shuffle(self.ids)
 
-    def __getitem__(self, idx):        
-        raise NotImplementedError
-    
-    def _preprocessing(self, img, msk=None):
+    def __getitem__(self, idx):
+        indices = self.ids[idx * self.batch_size:(idx + 1) * self.batch_size]
+        imgs, msks = self._read_data(indices)
+        imgs, msks = self._preprocessing(imgs, msks)
+        return imgs, msks
+
+    def _preprocessing(self, imgs, msks=None):
         raise NotImplementedError
 
     def _read_data(self, ids):
-        imgs, msks = [], []
-        for i in ids:
-            img = Image.open(os.path.join(self.data_dir, 'images', f'{self.fnames[i]}.png'))
-            msk = Image.open(os.path.join(self.data_dir, 'masks', f'{self.fnames[i]}_mask.png'))
-            if self.resized_shape:
-                img.resize(self.resized_shape, Image.BILINEAR)
-                msk.resize(self.resized_shape, Image.BILINEAR)
-            imgs.append(np.array(img))
-            msks.append(np.array(msk))
-        return np.array(imgs), np.array(msks)
+        raise NotImplementedError
