@@ -8,7 +8,7 @@ import sys
 import click
 from tensorflow.keras.callbacks import (
     EarlyStopping, ModelCheckpoint,
-    ReduceLROnPlateau
+    ReduceLROnPlateau, TensorBoard
 )
 from tensorflow.keras.optimizers import Adam
 
@@ -22,6 +22,8 @@ from stan.preprocessing import BUSIGenerator
 from stan.utils.metrics import dice_coef
 from stan.utils.losses import *
 
+from .helpers import get_callbacks, get_generators
+
 
 @click.command()
 @click.option('--train_dir', required=True, help='Data directory for training')
@@ -34,48 +36,27 @@ from stan.utils.losses import *
 @click.option('--input_shape', default=256, help='Input shape')
 @click.option('--input_channel', default=3)
 @click.option('--decode_mode', default='transpose')
+@click.option('--tensorboard', default=True, help='Logging with tensorboard')
+@click.option('--tensorboard_dir', default='./log', help='Directory to store logging tensorboard files')
+@click.option('--model_name', help='Model checkpoint file name')
 def train(
-    train_dir,
-    val_dir,
-    n_class,
-    epochs,
-    batch_size,
-    snapshot_dir,
-    lr,
-    input_shape,
-    input_channel,
-    decode_mode
+    train_dir, val_dir,
+    n_class, epochs, batch_size, lr,
+    input_shape, input_channel,
+    decode_mode,
+    snapshot_dir, tensorboard, tensorboard_dir,
+    model_name
 ):
     input_shape = (input_shape, input_shape)
 
     optimizer = Adam(lr=lr)
     criterion = focal_tversky_loss(gamma=0.75)
 
-    callbacks = [
-        ModelCheckpoint(snapshot_dir, monitor='val_loss', save_best_only=True),
-        EarlyStopping(monitor='val_loss', patience=8),
-        ReduceLROnPlateau(monitor='val_loss', patience=3)
-    ]
+    callbacks = get_callbacks(snapshot_dir, model_name, tensorboard, tensorboard_dir, batch_size)
 
-    train_fnames = [os.path.splitext(f)[0] 
-                    for f in os.listdir(os.path.join(train_dir, 'images'))]
-    train_gen = BUSIGenerator(
-        train_dir,
-        resized_shape=input_shape,
-        input_channel=input_channel,
-        horizontal_flip=True,
-        # rotation_range=20, width_shift_range=10,
-    )
-
-    val_gen = None
-    if val_dir:
-        val_fnames = [os.path.splitext(f)[0] 
-                        for f in os.listdir(os.path.join(val_dir, 'images'))]
-        val_gen = BUSIGenerator(
-            val_dir,
-            resized_shape=input_shape,
-            input_channel=input_channel
-        )
+    train_gen, val_gen = get_generators(train_dir, val_dir,
+                                        input_shape, input_channel,
+                                        horizontal_flip=True)
 
     model = STAN(
         n_class,
