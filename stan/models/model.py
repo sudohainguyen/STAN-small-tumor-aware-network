@@ -3,8 +3,13 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+from stan.utils import freeze_model
 from .builder import build_stan
-from ..utils import freeze_model
+
+
+# def freeze_model(model):
+#     for layer in model.layers:
+#         layer.trainable = True
 
 
 def STAN(
