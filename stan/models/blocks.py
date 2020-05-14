@@ -22,11 +22,16 @@ class Conv2DBlock(Layer):
         **kwargs
     ):
         super(Conv2DBlock, self).__init__()
+        self.n_filters = n_filters
+        self.kernel_size = kernel_size
+        self.activation = activation
+        self.use_bn = use_bn
         self.conv = Conv2D(n_filters, kernel_size, name=f'{name}_conv',
-                            use_bias=(not use_bn), padding='same')
+                            use_bias=(not use_bn), padding='same', **kwargs)
         self.use_bn = use_bn
         if use_bn:
-            self.bn = BatchNorm(name=f'{name}_bn')
+            # self.bn = BatchNorm(name=f'{name}_bn')
+            self.bn = BatchNormalization(name=f'{name}_bn')
         self.activation = Activation(activation, name=f'{name}_activation')
         
     def call(self, x):
@@ -35,6 +40,16 @@ class Conv2DBlock(Layer):
             x = self.bn(x)
         x = self.activation(x)
         return x
+
+    def get_config(self):
+        config = super(Conv2DBlock, self).get_config()
+        config.update({
+            'n_filters': self.n_filters,
+            'kernel_size': self.kernel_size,
+            'activation': self.activation,
+            'use_bn': self.use_bn
+        })
+        return config
 
 
 class BatchNorm(BatchNormalization):
@@ -51,6 +66,7 @@ class BatchNorm(BatchNormalization):
 class EncoderBlock(Layer):
     def __init__(self, n_filters, name='enc'):
         super(EncoderBlock, self).__init__()
+        self.n_filters = n_filters
         self.conv3_1 = Conv2DBlock(n_filters=n_filters, kernel_size=3, name=f'{name}_kernel3_1')
         self.conv3_2 = Conv2DBlock(n_filters=n_filters, kernel_size=3, name=f'{name}_kernel3_2')
         self.conv3_pool = MaxPooling2D(pool_size=(2, 2), name=f'{name}_kernel3_pool')
@@ -91,6 +107,18 @@ class EncoderBlock(Layer):
         skip2 = tf.concat([x3_1, concat], axis=3)
         return x3_pool, concat_pool, skip1, skip2
 
+    def get_config(self):
+        """ Gets the configuration of this layer.
+
+        Returns
+            Dictionary containing the parameters of this layer.
+        """        
+        config = super(EncoderBlock, self).get_config()
+        config.update({
+            'n_filters': self.n_filters
+        })
+        return config
+
 
 class DecoderBlock(Layer):
     def __init__(
@@ -111,6 +139,8 @@ class DecoderBlock(Layer):
         """        
     
         super(DecoderBlock, self).__init__()
+        self.n_filters = n_filters
+        self.mode = mode
         self.conv_1 = Conv2DBlock(n_filters, kernel_size=3)
         self.conv_2 = Conv2DBlock(n_filters, kernel_size=3)
 
@@ -136,3 +166,16 @@ class DecoderBlock(Layer):
         x = self.conv_1(tf.concat([x, skip1], axis=3))
         x = self.conv_2(tf.concat([x, skip2], axis=3))
         return x
+
+    def get_config(self):
+        """ Gets the configuration of this layer.
+
+        Returns
+            Dictionary containing the parameters of this layer.
+        """        
+        config = super(DecoderBlock, self).get_config()
+        config.update({
+            'n_filters': self.n_filters,
+            'mode': self.mode
+        })
+        return config

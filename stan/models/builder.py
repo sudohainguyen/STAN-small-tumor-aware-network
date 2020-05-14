@@ -27,7 +27,7 @@ def build_stan(
         (default: {[32, 64, 128, 256, 512]})
         activation {str} -- activation function of the last layer before giving prediction
     """
-    # inp = InputLayer(input_shape=input_shape)
+
     inp = Input(shape=input_shape)
 
     # Encoder
