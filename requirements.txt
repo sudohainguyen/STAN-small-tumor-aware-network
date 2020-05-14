@@ -1,0 +1,4 @@
+click
+tensorflow-gpu
+mlflow
+opencv-python
