@@ -10,3 +10,17 @@ Unofficial implementation of [STAN paper](https://arxiv.org/pdf/2002.01034.pdf) 
 ## Dataset
 
 We use the [Dataset B](https://arxiv.org/pdf/1801.03182.pdf) in this implementation. Access permission needed, visit the [Release Requirement](http://www2.docm.mmu.ac.uk/STAFF/m.yap/files/BUS_ReleaseAgreement.pdf) for more details.
+
+## TODOs
+
+- [x] Dataset B Generator
+- [x] Model implementation
+- [x] Training code using `click`
+- [x] Example for Dataset B
+- [x] Tversky loss function
+- [x] Dice loss function
+- [ ] Lovasz loss function
+- [ ] Focal loss function
+- [ ] Smarter training procedure with `mlflow` and `hydra`
+- [ ] Inference code
+- [ ] Evaluate code
