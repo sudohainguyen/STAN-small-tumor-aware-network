@@ -20,13 +20,13 @@ def _tversky_index(y_true, y_pred, smooth=1.0, alpha=0.5):
 def tversky_loss(smooth_tversky=1.0, alpha=0.5):
     def compute_loss(y_true, y_pred):
         return 1 - _tversky_index(y_true, y_pred,
-                                    smooth=smooth_tversky, alpha=alpha)
+                                  smooth=smooth_tversky, alpha=alpha)
     return compute_loss
 
 
 def focal_tversky_loss(gamma=0.75, smooth_tversky=1.0, alpha=0.5):
     def compute_loss(y_true, y_pred):
         pt_1 = _tversky_index(y_true, y_pred,
-                                smooth=smooth_tversky, alpha=alpha)
+                              smooth=smooth_tversky, alpha=alpha)
         return K.pow((1 - pt_1), gamma)
     return compute_loss

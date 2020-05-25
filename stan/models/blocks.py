@@ -6,7 +6,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import (
     Conv2D, Activation, BatchNormalization, 
-    Concatenate, MaxPooling2D, Layer, 
+    MaxPooling2D, Layer, 
     UpSampling2D, Conv2DTranspose
 )
 
@@ -27,7 +27,7 @@ class Conv2DBlock(Layer):
         self.activation = activation
         self.use_bn = use_bn
         self.conv = Conv2D(n_filters, kernel_size, name=f'{name}_conv',
-                            use_bias=(not use_bn), padding='same', **kwargs)
+                           use_bias=(not use_bn), padding='same', **kwargs)
         self.use_bn = use_bn
         if use_bn:
             # self.bn = BatchNorm(name=f'{name}_bn')
@@ -67,28 +67,44 @@ class EncoderBlock(Layer):
     def __init__(self, n_filters, name='enc'):
         super(EncoderBlock, self).__init__()
         self.n_filters = n_filters
-        self.conv3_1 = Conv2DBlock(n_filters=n_filters, kernel_size=3, name=f'{name}_kernel3_1')
-        self.conv3_2 = Conv2DBlock(n_filters=n_filters, kernel_size=3, name=f'{name}_kernel3_2')
-        self.conv3_pool = MaxPooling2D(pool_size=(2, 2), name=f'{name}_kernel3_pool')
+        self.conv3_1 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=3,
+                                   name=f'{name}_kernel3_1')
+        self.conv3_2 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=3,
+                                   name=f'{name}_kernel3_2')
+        self.conv3_pool = MaxPooling2D(pool_size=(2, 2),
+                                       name=f'{name}_kernel3_pool')
 
-        self.conv1_1 = Conv2DBlock(n_filters=n_filters, kernel_size=1, name=f'{name}_kernel1_1')
-        self.conv1_2 = Conv2DBlock(n_filters=n_filters, kernel_size=1, name=f'{name}_kernel1_2')
+        self.conv1_1 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=1,
+                                   name=f'{name}_kernel1_1')
+        self.conv1_2 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=1,
+                                   name=f'{name}_kernel1_2')
 
-        self.conv5_1 = Conv2DBlock(n_filters=n_filters, kernel_size=5, name=f'{name}_kernel5_1')
-        self.conv5_2 = Conv2DBlock(n_filters=n_filters, kernel_size=5, name=f'{name}_kernel5_1')
-        self.agg_pool = MaxPooling2D(pool_size=(2, 2), name=f'{name}_agg_pool')
+        self.conv5_1 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=5,
+                                   name=f'{name}_kernel5_1')
+        self.conv5_2 = Conv2DBlock(n_filters=n_filters,
+                                   kernel_size=5,
+                                   name=f'{name}_kernel5_1')
+        self.agg_pool = MaxPooling2D(pool_size=(2, 2),
+                                     name=f'{name}_agg_pool')
 
     def call(self, kernel3_inp, kernelconcat_inp):
         """Feed forward through the Encoder block
 
         Arguments:
-            kernel3_inp {tensor} -- feature maps of kernel3 conv 
+            kernel3_inp {tensor} -- feature maps of kernel3 conv
                 from previous block or just an image
-            kernelconcat_inp {[type]} -- feature maps of concatenation (kernel1 + kernel5)
+            kernelconcat_inp {[type]} -- feature maps of concatenation
+                (kernel1 + kernel5)
                 from previous block or just an image
 
         Returns:
-            tuple -- (kernel3 output, concat output, skip connection 1, skip connection 2)
+            tuple -- (kernel3 output, concat output,
+                      skip connection 1, skip connection 2)
         """
 
         x1 = self.conv1_1(kernelconcat_inp)
@@ -96,7 +112,7 @@ class EncoderBlock(Layer):
 
         x5 = self.conv5_1(kernelconcat_inp)
         x5 = self.conv5_2(x5)
-        
+
         concat = tf.concat([x1, x5], axis=3)
         concat_pool = self.agg_pool(concat)
 
@@ -137,7 +153,7 @@ class DecoderBlock(Layer):
         Raises:
             ValueError: when the mode is not 'upsampling' or 'transpose'
         """        
-    
+
         super(DecoderBlock, self).__init__()
         self.n_filters = n_filters
         self.mode = mode
@@ -147,7 +163,8 @@ class DecoderBlock(Layer):
         if mode == 'upsampling':
             self.up = UpSampling2D(size=(2, 2))
         elif mode == 'transpose':
-            self.up = Conv2DTranspose(n_filters, kernel_size=3, strides=(2, 2), padding='same')
+            self.up = Conv2DTranspose(n_filters, kernel_size=3,
+                                      strides=(2, 2), padding='same')
         else:
             raise ValueError()
 

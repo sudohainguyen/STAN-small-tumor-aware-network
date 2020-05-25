@@ -6,7 +6,6 @@
 import math
 import numpy as np
 
-import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, Iterator
 
 
@@ -25,12 +24,14 @@ class BaseGenerator(Iterator):
         """Generator initialization, inherits Iterator class
 
         Arguments:
-            fnames {list} -- List of filenames from dataset (not including extension part)
+            fnames {list} -- List of filenames from dataset 
+                            (not including extension part)
 
         Keyword Arguments:
             data_dir {str} -- The main dataset directory (default: {'.'})
             n_classes {int} -- Number of classes (default: {1})
-            resized_shape {tuple} -- All images are reshaped to this size (default: {(256, 256)})
+            resized_shape {tuple} -- All images are reshaped to this size 
+                                    (default: {(256, 256)})
             batch_size {int} -- Batch size (default: {8})
             shuffle {bool} -- (default: {False})
         """    

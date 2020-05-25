@@ -28,10 +28,14 @@ def STAN(
 
     Keyword Arguments:
         input_shape {tuple} -- Shape of input tesors (default: {(256, 256, 3)})
-        encoder_weights {[type]} -- pretrained weights path for encoder (default: {None})
-        output_activation {str} -- Activation function for output prediction (default: {'sigmoid'})
-        decode_mode {str} -- Mode for decoder, could be Transpose or Upsampling (default: {'transpose'})
-        freeze_encoder {bool} -- Freezing encoder for fine-tuning (default: {False})
+        encoder_weights {[type]} -- pretrained weights path for encoder 
+                                    (default: {None})
+        output_activation {str} -- Activation function for output prediction 
+                                    (default: {'sigmoid'})
+        decode_mode {str} -- Mode for decoder, could be Transpose or 
+                             Upsampling (default: {'transpose'})
+        freeze_encoder {bool} -- Freezing encoder for fine-tuning 
+                                 (default: {False})
     """    
     model = build_stan(
         n_classes=n_classes,
