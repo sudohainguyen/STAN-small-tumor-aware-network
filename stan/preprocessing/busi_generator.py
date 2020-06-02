@@ -11,20 +11,35 @@ from .generator import BaseGenerator
 
 
 class BUSIGenerator(BaseGenerator):
-    def __init__(self, fnames, input_channel=3, **kwargs):
+    def __init__(self, fnames, input_channel=3, norm_mode='tf', **kwargs):
         super(BUSIGenerator, self).__init__(fnames, **kwargs)
         self.input_channel = input_channel
+        self.norm_mode = norm_mode
+
+    def _norm(self, tensor, mode='tf'):
+        if mode == 'tf':
+            tensor /= 127.5
+            tensor -= 1.
+        elif mode == 'caffe':
+            tensor[..., 0] -= 103.939
+            tensor[..., 1] -= 116.779
+            tensor[..., 2] -= 123.68
+        elif mode == 'max':
+            tensor /= 255
+        elif mode == 'none':
+            pass
+        else:
+            raise NotImplementedError
+        return tensor
 
     def _preprocessing(self, imgs, msks=None):
-        # imgs[..., 0] -= 103.939
-        # imgs[..., 1] -= 116.779
-        # imgs[..., 2] -= 123.68
-        # imgs -= 1.
-        imgs /= 255
-        imgs = self.img_gen.random_transform(x=imgs, seed=self.seed)
+        imgs = self._norm(imgs, mode=self.norm_mode)
+        imgs = self.img_gen.flow(imgs, seed=self.seed)
+        imgs = next(imgs)
         if msks is not None:
-            msks /= 255
-            msks = self.msk_gen.random_transform(x=msks, seed=self.seed)
+            msks = self._norm(msks, mode='max')
+            msks = self.msk_gen.flow(msks, seed=self.seed)
+            msks = next(msks)
             return imgs, msks
         return imgs
 
@@ -36,9 +51,11 @@ class BUSIGenerator(BaseGenerator):
 
         for i, index in enumerate(ids):
             file_name = self.fnames[index]
+            
             read_im_mode = 1
             if self.input_channel == 1:
                 read_im_mode = 0
+
             img = cv2.imread(
                 os.path.join(self.data_dir, 'images', f'{file_name}.png'),
                 read_im_mode
