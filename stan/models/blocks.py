@@ -92,7 +92,7 @@ class EncoderBlock(Layer):
         self.agg_pool = MaxPooling2D(pool_size=(2, 2),
                                      name=f'{name}_agg_pool')
 
-    def call(self, kernel3_inp, kernelconcat_inp):
+    def call(self, inputs):
         """Feed forward through the Encoder block
 
         Arguments:
@@ -106,7 +106,8 @@ class EncoderBlock(Layer):
             tuple -- (kernel3 output, concat output,
                       skip connection 1, skip connection 2)
         """
-
+        kernel3_inp, kernelconcat_inp = inputs
+        
         x1 = self.conv1_1(kernelconcat_inp)
         x1 = self.conv1_2(x1)
 
@@ -168,7 +169,7 @@ class DecoderBlock(Layer):
         else:
             raise ValueError()
 
-    def call(self, inp, skip1, skip2):
+    def call(self, inputs):
         """Feed forward the Decoding block
 
         Arguments:
@@ -178,7 +179,9 @@ class DecoderBlock(Layer):
 
         Returns:
             tensor -- output
-        """        
+        """
+        inp, skip1, skip2 = inputs
+        
         x = self.up(inp)
         x = self.conv_1(tf.concat([x, skip1], axis=3))
         x = self.conv_2(tf.concat([x, skip2], axis=3))
