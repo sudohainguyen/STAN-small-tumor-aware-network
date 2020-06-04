@@ -3,8 +3,8 @@
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
-__all__ = ['focal_loss', 'focal_tversky_loss', 'tversky_loss',
-           'dice_loss', 'lovasz_loss']
+__all__ = ['focal_tversky_loss', 'tversky_loss',
+           'dice_loss', 'lovasz_loss', 'focal_loss']
 
 
 from .focal import focal_loss
