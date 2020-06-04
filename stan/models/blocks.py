@@ -23,6 +23,13 @@ def conv2D(n_filters, kernel_size, activation='relu', use_bn=False, **kwargs):
 
 
 def encoder_block(n_filters):
+    """ Encoder Block
+
+    Parameters
+    ----------
+    n_filters : int
+        Number of filters for each conv layer
+    """    
     def layer(inputs):
         kernel3_inp, kernelconcat_inp = inputs
         x1 = conv2D(n_filters, kernel_size=1)(kernelconcat_inp)
@@ -46,6 +53,18 @@ def encoder_block(n_filters):
 
 
 def decoder_block(n_filters, use_bn=False, mode='transpose'):
+    """Decoder Block
+
+    Parameters
+    ----------
+    n_filters : int
+        Number of for the each conv layer and the transpose conv layer.
+    use_bn : bool, optional
+        Add BatchNormalization after the transpose conv layer, by default False
+    mode : str, optional
+        UpSampling mode, could be `transpose` or `upsampling`, 
+        by default 'transpose'
+    """    
     def layer(inputs):
         inp, skip1, skip2 = inputs
         if mode == 'transpose':

@@ -14,32 +14,42 @@ from .builder import build_stan
 
 def STAN(
     n_classes, 
-    input_shape=(256, 256, 3),
-    encoder_weights=None,
+    input_shape=(None, None, 3),
+    filters=[32, 64, 128, 256, 512],
     output_activation='sigmoid',
     decode_mode='transpose',
     freeze_encoder=False,
     model_name='stan'
 ):
-    """[summary]
+    """Initialize STAN model
 
-    Arguments:
-        n_classes {[type]} -- Number of classes for segmentation
+    Parameters
+    ----------
+    n_classes : int
+        Number of classes
+    input_shape : tuple, optional
+        Shape of input tesors, by default (None, None, 3)
+    filters : list, optional
+        Number of filters for each encoder block,
+        by default [32, 64, 128, 256, 512]
+    output_activation : str, optional
+        Activation function for output prediction, by default 'sigmoid'
+    decode_mode : str, optional
+        Mode for decoder, could be `transpose` or `upsampling`,
+        by default 'transpose'
+    freeze_encoder : bool, optional
+        Freezing encoder for fine-tuning, by default False
+    model_name : str, optional
+        Model name, by default 'stan'
 
-    Keyword Arguments:
-        input_shape {tuple} -- Shape of input tesors (default: {(256, 256, 3)})
-        encoder_weights {[type]} -- pretrained weights path for encoder 
-                                    (default: {None})
-        output_activation {str} -- Activation function for output prediction 
-                                    (default: {'sigmoid'})
-        decode_mode {str} -- Mode for decoder, could be Transpose or 
-                             Upsampling (default: {'transpose'})
-        freeze_encoder {bool} -- Freezing encoder for fine-tuning 
-                                 (default: {False})
+    Returns
+    -------
+    Model
     """    
     model = build_stan(
         n_classes=n_classes,
         input_shape=input_shape,
+        filters=filters,
         activation=output_activation,
         decode_mode=decode_mode)
     

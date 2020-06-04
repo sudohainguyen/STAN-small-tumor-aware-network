@@ -21,20 +21,27 @@ class BaseGenerator(Iterator):
         seed=None,
         **kwargs
     ):
-        """Generator initialization, inherits Iterator class
+        """ Generator initialization, inherits Iterator class
 
-        Arguments:
-            fnames {list} -- List of filenames from dataset 
+        Parameters
+        ----------
+        fnames : list, array
+            List of filenames from dataset 
                             (not including extension part)
-
-        Keyword Arguments:
-            data_dir {str} -- The main dataset directory (default: {'.'})
-            n_classes {int} -- Number of classes (default: {1})
-            resized_shape {tuple} -- All images are reshaped to this size 
-                                    (default: {(256, 256)})
-            batch_size {int} -- Batch size (default: {8})
-            shuffle {bool} -- (default: {False})
+        data_dir : str, optional
+            The main dataset directory, by default '.'
+        n_classes : int, optional
+            Number of classes, by default 1
+        resized_shape : tuple, optional
+            All images are reshaped to this size, by default (256, 256)
+        batch_size : int, optional
+            Number of images each batch, by default 8
+        shuffle : bool, optional
+            Randomly shuffle at the end of each epoch, by default False
+        seed : int, optional
+            Random seed, by default None
         """    
+
         self.fnames = fnames
         self.data_dir = data_dir
         self.seed = seed
