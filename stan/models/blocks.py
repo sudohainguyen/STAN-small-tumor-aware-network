@@ -6,9 +6,67 @@
 import tensorflow as tf
 from tensorflow.keras.layers import (
     Conv2D, Activation, BatchNormalization, 
-    MaxPooling2D, Layer, 
-    UpSampling2D, Conv2DTranspose
+    MaxPooling2D, Layer, concatenate,
+    UpSampling2D, Conv2DTranspose, ReLU
 )
+
+
+def conv2D(n_filters, kernel_size, activation='relu', use_bn=False, **kwargs):
+    def layer(x):
+        x = Conv2D(n_filters, kernel_size, use_bias=(not use_bn),
+                   padding='same', **kwargs)(x)
+        if use_bn:
+            x = BatchNormalization(x)
+        x = Activation(activation)(x)
+        return x
+    return layer
+
+
+def encoder_block(n_filters):
+    def layer(inputs):
+        kernel3_inp, kernelconcat_inp = inputs
+        x1 = conv2D(n_filters, kernel_size=1)(kernelconcat_inp)
+        x1 = conv2D(n_filters, kernel_size=1)(x1)
+
+        x5 = conv2D(n_filters, kernel_size=5)(kernelconcat_inp)
+        x5 = conv2D(n_filters, kernel_size=5)(x5)
+
+        # concat = tf.concat([x1, x5], axis=3)
+        concat = concatenate([x1, x5], axis=3)
+        concat_pool = MaxPooling2D(pool_size=(2, 2))(concat)
+
+        x3 = x3_1 = conv2D(n_filters, kernel_size=3)(kernel3_inp)
+        x3 = skip1 = conv2D(n_filters, kernel_size=3)(x3)
+        x3_pool = MaxPooling2D(pool_size=(2, 2))(x3)
+
+        # skip2 = tf.concat([x3_1, concat], axis=3)
+        skip2 = concatenate([x3_1, concat], axis=3)
+        return x3_pool, concat_pool, skip1, skip2
+    return layer
+
+
+def decoder_block(n_filters, use_bn=False, mode='transpose'):
+    def layer(inputs):
+        inp, skip1, skip2 = inputs
+        if mode == 'transpose':
+            x = Conv2DTranspose(n_filters, kernel_size=3,
+                                strides=(2, 2), padding='same')(inp)
+            if use_bn:
+                x = BatchNormalization(x)
+            x = ReLU()(x)
+        elif mode == 'upsampling':
+            x = UpSampling2D(size=2)(inp)
+        else:
+            raise ValueError()
+        
+        # concat = tf.concat([x, skip1], axis=3)
+        concat = concatenate([x, skip1], axis=3)
+        x = conv2D(n_filters, kernel_size=3)(concat)
+        # concat = tf.concat([x, skip2], axis=3)
+        concat = concatenate([x, skip2], axis=3)
+        x = conv2D(n_filters, kernel_size=3)(concat)
+        return x
+    return layer
 
 
 class Conv2DBlock(Layer):
@@ -183,6 +241,7 @@ class DecoderBlock(Layer):
         inp, skip1, skip2 = inputs
         
         x = self.up(inp)
+        x = tf.nn.relu(x)
         x = self.conv_1(tf.concat([x, skip1], axis=3))
         x = self.conv_2(tf.concat([x, skip2], axis=3))
         return x
